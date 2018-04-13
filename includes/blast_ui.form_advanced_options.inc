@@ -51,6 +51,14 @@ function blast_ui_blastn_advanced_options_form(&$form, $form_state) {
     '#description' => t('Select the maximum number of unique target sequences per query sequence to show results for.'),
   );
 
+  $form['ALG']['GParam']['maxHsp'] = array(
+    '#type' => 'select',
+    '#title' => ('Max HSP Alignments'),
+    '#options' => _get_max_hsps('blastn'),
+    '#default_value' => $defaults['max_hsps'],
+    '#description' => t('Select the maximum number of HSP alignments per target sequence to show results for.'),
+  );
+
 /*eksc: remove until we learn how this is implemented by NCBI
   $form['ALG']['GParam']['shortQueries'] = array(
     '#type' => 'checkbox',
@@ -147,7 +155,10 @@ function blast_ui_blastn_advanced_options_form_submit($form, $form_state) {
   $eVal = $form_state['values']['eVal'];
 
   $trgtKey = $form_state['values']['maxTarget'];
-  $numAlign = $form['ALG']['GParam']['maxTarget']['#options'][$trgtKey];
+  $maxTarget = $form['ALG']['GParam']['maxTarget']['#options'][$trgtKey];
+
+  $hspKey = $form_state['values']['maxHsp'];
+  $maxHsp = $form['ALG']['GParam']['maxHsp']['#options'][$hspKey];
 
   $wsKey = $form_state['values']['wordSize'];
   $wordSize = $form['ALG']['GParam']['wordSize']['#options'][$wsKey];
@@ -162,7 +173,8 @@ function blast_ui_blastn_advanced_options_form_submit($form, $form_state) {
   $qRange = $form_state['values']['qRange'];
 
   return array(
-    'max_target_seqs' => $numAlign,
+    'max_target_seqs' => $maxTarget,
+    'max_hsps' => $maxHsp,
     'evalue'          => $eVal,
     'word_size'       => $wordSize,
     'gapopen'         => $gap['gapOpen'],
@@ -214,6 +226,14 @@ function blast_ui_blastx_advanced_options_form(&$form, $form_state) {
     '#options' => _get_max_target('blastx'),
     '#default_value' => $defaults['max_target_seqs'],
     '#description' => t('Select the maximum number of aligned sequences to display'),
+  );
+
+  $form['ALG']['GParam']['maxHsp'] = array(
+    '#type' => 'select',
+    '#title' => ('Max HSP Alignments'),
+    '#options' => _get_max_hsps('blastx'),
+    '#default_value' => $defaults['max_hsps'],
+    '#description' => t('Select the maximum number of HSP alignments per target sequence to show results for.'),
   );
 
   $form['ALG']['GParam']['eVal'] = array(
@@ -374,6 +394,15 @@ function blast_ui_blastp_advanced_options_form(&$form, $form_state) {
     '#description' => t('Select the maximum number of aligned sequences to display'),
   );
 
+  $form['ALG']['GParam']['maxHsp'] = array(
+    '#type' => 'select',
+    '#title' => ('Max HSP Alignments'),
+    '#options' => _get_max_hsps('blastp'),
+    '#default_value' => $defaults['max_hsps'],
+    '#description' => t('Select the maximum number of HSP alignments per target sequence to show results for.'),
+  );
+
+
 /*eksc: remove until we learn how this is implemented
   $form['ALG']['GParam']['shortQueries'] = array(
    '#type' => 'checkbox',
@@ -496,7 +525,10 @@ function blast_ui_blastp_advanced_options_form_submit($form, $form_state) {
 
 
   $trgtKey = $form_state['values']['maxTarget'];
-  $numAlign = $form['ALG']['GParam']['maxTarget']['#options'][$trgtKey];
+  $maxTarget = $form['ALG']['GParam']['maxTarget']['#options'][$trgtKey];
+
+  $hspKey = $form_state['values']['maxHsp'];
+  $maxHsp = $form['ALG']['GParam']['maxHsp']['#options'][$hspKey];
 
   $wsKey = $form_state['values']['wordSize'];
   $wordSize = $form['ALG']['GParam']['wordSize']['#options'][$wsKey];
@@ -512,7 +544,8 @@ function blast_ui_blastp_advanced_options_form_submit($form, $form_state) {
 //  q_range
 
   return array(
-    'max_target_seqs' => $numAlign,
+    'max_target_seqs' => $maxTarget,
+    'max_hsps' => $maxHsp,
     'evalue'          => $eVal,
     'word_size'       => $wordSize,
     'gapopen'         => $gapOpen,
@@ -703,6 +736,14 @@ function blast_ui_tblastn_advanced_options_form(&$form, $form_state) {
     '#description' => t('Select the maximum number of aligned sequences to display'),
   );
 
+  $form['ALG']['GParam']['maxHsp'] = array(
+    '#type' => 'select',
+    '#title' => ('Max HSP Alignments'),
+    '#options' => _get_max_hsps('tblastn'),
+    '#default_value' => $defaults['max_hsps'],
+    '#description' => t('Select the maximum number of HSP alignments per target sequence to show results for.'),
+  );
+
   $form['ALG']['GParam']['eVal'] = array(
     '#type' => 'textfield',
     '#title' => t('e-Value (Expected Threshold)'),
@@ -817,6 +858,8 @@ function _get_default_values($options) {
   // restore previous values or set to default
   $max_target = (isset($options['max_target_seqs']))
             ? $options['max_target_seqs'] : 500;
+  $max_hsps = (isset($options['max_hsps']))
+            ? $options['max_hsps'] : 500;
   $short_queries = (isset($options['shortQueries']))
             ? $options['shortQueries'] : true;
   $evalue = (isset($options['evalue']))
@@ -877,6 +920,7 @@ function _get_default_values($options) {
             ? $options['matrix'] : 'PAM30';
   return array(
     'max_target_seqs' => $max_target,
+    'max_hsps' => $max_hsps,
     'short_queries'   => $short_queries,
     'word_size'       => $word_size,
     'evalue'          => $evalue,
@@ -914,6 +958,29 @@ function _get_max_target($which) {
       );
   }//switch
 }
+
+/**
+ * Get a list of options for the max_hsp blast option.
+ *
+ * The options are the same for all programs
+ * and describe the maximum number of aligned sequences to keep.
+ */
+function _get_max_hsps($which) {
+  switch ($which) {
+    case 'blastn':
+    case 'blastx':
+    case 'blastp':
+    case 'tblastn':
+      return array(
+        0 => t(' '),
+        1 => t('1'),
+        5 => t('5'),
+        10 => t('10'),
+        100 => t('100'),
+      );
+  }//switch
+}
+
 
 /**
  * Get a list of options for work size.
