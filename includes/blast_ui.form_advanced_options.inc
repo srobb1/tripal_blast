@@ -901,6 +901,7 @@ function _get_max_target($which) {
     case 'tblastn':
       return array(
         0 => t(' '),
+        1 => t('1'),
         10 => t('10'),
         50 => t('50'),
         100 => t('100'),
